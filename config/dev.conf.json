@@ -1,0 +1,45 @@
+{
+  "host": {
+    "ip": "127.0.0.1",
+    "port": 8787
+  },
+
+  "database": [
+    {
+      "id": "ms_db",
+      "pool": 4,
+      "host": "127.0.0.1",
+      "port": 6600,
+      "user": "yomail_db",
+      "password": "1234567",
+      "name": "yomail_member_db"
+    },
+    {
+      "id": "im_db",
+      "pool": 4,
+      "host": "127.0.0.1",
+      "port": 6600,
+      "user": "yomail_db",
+      "password": "1234567",
+      "name": "yomail_email_db"
+    },
+    {
+      "id": "msg_db",
+      "pool": 4,
+      "host": "127.0.0.1",
+      "port": 6600,
+      "user": "yomail_db",
+      "password": "1234567",
+      "name": "yomail_msg_db"
+    },
+    {
+      "id": "web_db",
+      "pool": 4,
+      "host": "127.0.0.1",
+      "port": 6600,
+      "user": "yomail_web",
+      "password": "yomail-web-abc?",
+      "name": "yomail_membership_web_db"
+    }
+  ]
+}

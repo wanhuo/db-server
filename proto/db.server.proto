@@ -1,0 +1,88 @@
+syntax = "proto2";
+
+package dbproto;
+
+enum ReqMsgID
+{
+	RunSql_CMD       = 11;
+	QuerySql_CMD     = 22;
+	BatchSqlList_CMD = 33;
+}
+
+enum ResMsgID
+{
+	RunSqlResponse_CMD   = 11;
+	QuerySqlResponse_CMD = 22;
+	BatchSqlListResponse_CMD = 33;
+}
+
+
+message ErrorInfo
+{
+	required int32 code=1;
+	optional string message=2; 
+}
+
+message OneField
+	{
+		optional bytes value=1;
+	}
+
+message RunSql
+{
+	required string op_id=1;
+	required string xml=2;
+	repeated OneField params=3; 
+	optional int32 needInsertId=4;
+}
+
+message QuerySql
+{
+	required string op_id=1;
+	required string xml=2;
+	repeated OneField params=3;  
+}
+
+message RunSqlResponse
+{
+	required string op_id=1;
+	optional ErrorInfo error=2; 
+	optional int64 lastInsertId=3;
+}
+
+message OneRow
+	{
+		repeated OneField OneField=1;
+	}
+
+message QuerySqlResponse
+{
+	required string op_id=1;
+	optional ErrorInfo error=2;
+	repeated OneRow rows=3; 
+}
+
+message BatchSqlList
+{
+	message  OneSql
+	{
+		required string sql_id=1;
+		required string xml=2;
+		repeated OneField params=3;
+		required bool is_query=4;
+	}
+	required string op_id=1;
+	repeated OneSql sql=2;  
+}
+
+message BatchSqlListResponse
+{
+	message  OneSqlResult
+	{
+		required string sql_id=1;
+		repeated OneRow rows=2;
+		optional ErrorInfo error=3;
+	}
+	required string op_id=1;
+	repeated OneSqlResult result=2;  
+}
