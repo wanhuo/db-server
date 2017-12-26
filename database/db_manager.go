@@ -2,12 +2,14 @@ package database
 
 import (
 	"fmt"
+	"strconv"
 	"db-server/config"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/davyxu/golog"
 	"db-server/proto/dbproto"
 )
+
 var log *golog.Logger = golog.New("Database")
 //connect to mysql
 func init() {
@@ -33,21 +35,21 @@ func init() {
 	}
 }
 
-type sqlArgs []interface{}
-//type runSqlFunc   func(sqlArgs) error
+type sqlArgs []string
+type runSqlFunc   func(sqlArgs) error
 type querySqlFunc func(sqlArgs) ([]*dbproto.OneRow, error)
 
 var (
-	//runSqlHandler   = make(map[string]runSqlFunc)
+	runSqlHandler   = make(map[string]runSqlFunc)
 	querySqlHandler = make(map[string]querySqlFunc)
 )
 
-//func RegisterRunSqlCB(action string, sqlHandler runSqlFunc){
-//	if f := runSqlHandler[action]; f != nil{
-//		return
-//	}
-//	runSqlHandler[action] = sqlHandler
-//}
+func RegisterRunSqlCB(action string, sqlHandler runSqlFunc){
+	if f := runSqlHandler[action]; f != nil{
+		return
+	}
+	runSqlHandler[action] = sqlHandler
+}
 
 func RegisterQueryCB(action string, sqlHandler querySqlFunc){
 	if f := querySqlHandler[action]; f != nil{
@@ -63,7 +65,30 @@ func GetQueryHandler(action string) querySqlFunc {
 	return nil
 }
 
-
-
-
-
+func serializeRowDate(params []interface{}) (row *dbproto.OneRow){
+	var fieldList []*dbproto.OneField
+	for _, field := range params{
+		var valueStr string
+		switch field.(type) {
+		case int:
+			value := field.(int)
+			valueStr = strconv.Itoa(int(value))
+		case int32:
+			value := field.(int32)
+			valueStr = strconv.Itoa(int(value))
+		case int64:
+			value := field.(int64)
+			valueStr = strconv.Itoa(int(value))
+		case string:
+			valueStr = field.(string)
+		}
+		field := dbproto.OneField{
+			Value: []byte(valueStr),
+		}
+		fieldList = append(fieldList, &field)
+	}
+	row = &dbproto.OneRow{
+		OneField:fieldList,
+	}
+	return
+}
