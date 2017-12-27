@@ -35,9 +35,9 @@ func init() {
 	}
 }
 
-type sqlArgs []string
-type runSqlFunc   func(sqlArgs) error
-type querySqlFunc func(sqlArgs) ([]*dbproto.OneRow, error)
+type SqlArgList []string
+type runSqlFunc   func(SqlArgList) error
+type querySqlFunc func(SqlArgList) ([]*dbproto.OneRow, error)
 
 var (
 	runSqlHandler   = make(map[string]runSqlFunc)
@@ -58,11 +58,34 @@ func RegisterQueryCB(action string, sqlHandler querySqlFunc){
 	querySqlHandler[action] = sqlHandler
 }
 
-func GetQueryHandler(action string) querySqlFunc {
-	if f := querySqlHandler[action]; f != nil{
-		return querySqlHandler[action]
+func ProcessQuerySql(action string, params []*dbproto.OneField) (rows []*dbproto.OneRow, err error) {
+	handler := querySqlHandler[action]
+	if handler == nil{
+		err = fmt.Errorf("can not find %s handler", action)
+		return
 	}
-	return nil
+	var paramList SqlArgList
+	for _, field := range params {
+		log.Debugf("field: %s ", string(field.Value))
+		paramList = append(paramList, string(field.Value))
+	}
+	rows, err = handler(paramList)
+	return
+}
+
+func ProcessRunSql(action string, params []*dbproto.OneField) (err error) {
+	handler := runSqlHandler[action]
+	if handler == nil{
+		err = fmt.Errorf("can not find %s handler", action)
+		return
+	}
+	var paramList SqlArgList
+	for _, field := range params {
+		log.Debugf("field: %s ", string(field.Value))
+		paramList = append(paramList, string(field.Value))
+	}
+	err = handler(paramList)
+	return
 }
 
 func serializeRowDate(params []interface{}) (row *dbproto.OneRow){
