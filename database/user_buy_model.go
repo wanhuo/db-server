@@ -1,9 +1,9 @@
 package database
 
 import (
-	//"strconv"
+	"strconv"
 	"github.com/astaxie/beego/orm"
-	//"db-server/proto/dbproto"
+	"db-server/proto/dbproto"
 )
 
 type UserTopUpShell struct{
@@ -21,7 +21,7 @@ func (u *UserTopUpShell) TableName() string {
 }
 
 type UserTopUpRecord struct{
-	AutoID        int    `orm:"column(auto_id);auto;pk"`
+	AutoID        int    `orm:"-;auto;pk"`
 	UserId        int	 `orm:"column(userId);"`
 	TransactionID string `orm:"column(transactionId);index"`
 	RMB			  int    `orm:"column(rmb)"`
@@ -50,10 +50,90 @@ func (u *UserBuyMembership) TableName() string {
 	return "purchase_record_t"
 }
 
+func userTopup(args SqlArgList) (err error) {
+	topupId, payType := args[1], args[5]
+	userId, err := strconv.Atoi(args[0])
+	rmb,    err := strconv.Atoi(args[2])
+	shell,  err := strconv.Atoi(args[3])
+	status, err := strconv.Atoi(args[4])
+	time,   err := strconv.Atoi(args[6])
+	if err != nil {
+		log.Errorf("parse topup argument error: %s", err)
+		return
+	}
+	mysqlORM := orm.NewOrm()
+	mysqlORM.Using("yomail_web_db")
+	UserTopup := UserTopUpRecord{0, userId, topupId, rmb, shell, status, payType, time}
+	_, err = mysqlORM.Insert(&UserTopup)
+	if err != nil {
+		log.Errorf("Insert new transaction error: %s", err)
+	}
+	return
+}
 
+func userBuyVip(args SqlArgList) (err error) {
+	orderId, goodsId := args[1], args[4]
+	userId, err := strconv.Atoi(args[0])
+	shell,  err := strconv.Atoi(args[2])
+	time,   err := strconv.Atoi(args[3])
+	start,  err := strconv.Atoi(args[5])
+	end,    err := strconv.Atoi(args[6])
+	if err != nil {
+		log.Errorf("parse BuyVip argument error: %s", err)
+		return
+	}
+	mysqlORM := orm.NewOrm()
+	mysqlORM.Using("yomail_web_db")
+	UserBuyVip := UserBuyMembership{0,userId, orderId, shell, time, goodsId, start, end, ""}
+	_, err = mysqlORM.Insert(&UserBuyVip)
+	if err != nil {
+		log.Errorf("Insert new transaction error: %s", err)
+	}
+	return
+}
+
+func topupHistory(args SqlArgList) (rows []*dbproto.OneRow, err error) {
+	userId, err := strconv.Atoi(args[0])
+	mysqlORM := orm.NewOrm()
+	mysqlORM.Using("yomail_web_db")
+	var historyList []orm.ParamsList
+	_, err = mysqlORM.QueryTable("topup_record_t").Filter("userId", userId).ValuesList(&historyList,
+		"transactionId", "rmb", "shell", "status", "payType", "transactionTime")
+	if err != nil {
+		log.Errorf("query topup history error: %s", err)
+		return
+	}
+	for _, record := range historyList {
+		row  := serializeRowDate(record)
+		rows = append(rows, row)
+	}
+	return
+}
+
+func userVipHistory(args SqlArgList) (rows []*dbproto.OneRow, err error) {
+	userId, err := strconv.Atoi(args[0])
+	mysqlORM := orm.NewOrm()
+	mysqlORM.Using("yomail_web_db")
+	var historyList []orm.ParamsList
+	_, err = mysqlORM.QueryTable("purchase_record_t").Filter("userId", userId).ValuesList(&historyList,
+		"orderId", "shell", "orderTime", "goodsId", "start_time", "end_time")
+	if err != nil {
+		log.Errorf("query topup history error: %s", err)
+		return
+	}
+	for _, record := range historyList {
+		row  := serializeRowDate(record)
+		rows = append(rows, row)
+	}
+	return
+}
 
 func init() {
 	orm.RegisterModel(new(UserTopUpShell), new(UserBuyMembership))
+	RegisterRunSqlCB("user.buy.shell",  userTopup)
+	RegisterRunSqlCB("user.buy.vip",   userBuyVip)
+	RegisterQueryCB("topup.history", topupHistory)
+	RegisterQueryCB("buy.history", userVipHistory)
 }
 
 
