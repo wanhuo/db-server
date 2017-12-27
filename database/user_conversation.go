@@ -18,8 +18,8 @@ func (u *UserConversations) TableName() string {
 	return "user_conversation_tab"
 }
 
-func userCidList(args sqlArgs) (rows []*dbproto.OneRow, error error) {
-	userId, _ := strconv.Atoi(args[0].(string))
+func userCidList(args SqlArgList) (rows []*dbproto.OneRow, error error) {
+	userId, _ := strconv.Atoi(args[0])
 	mysqlORM := orm.NewOrm()
 	mysqlORM.Using("yomail_msg_db")
 	var cidList orm.ParamsList
