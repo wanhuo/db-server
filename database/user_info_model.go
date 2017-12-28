@@ -29,7 +29,7 @@ type UserBasicInfo struct {
 }
 
 func (u *UserBasicInfo) TableName() string {
-	return "user_info_t"
+	return "user_info_tab"
 }
 
 type UserExtraInfo struct {
@@ -126,7 +126,7 @@ func changePassword(args SqlArgList) (err error)  {
 	return
 }
 
-func updateUserInfo(args SqlArgList) error {
+func updateUserInfo(args SqlArgList) (err error) {
 	userId, _   := strconv.Atoi(args[0])
 	nickname, avatar := args[1], args[2]
 	mysqlORM := orm.NewOrm()
@@ -135,8 +135,9 @@ func updateUserInfo(args SqlArgList) error {
 		Nickname: nickname,
 		Avatar: avatar,
 	}
-	mysqlORM.Update(&user, "nickname", "avatar")
-	return nil
+	_, err = mysqlORM.Update(&user, "nickname", "avatar")
+	log.Errorf("update user info error : %s", err)
+	return
 }
 
 func updateExtraInfo(args SqlArgList) (err error) {
@@ -145,12 +146,13 @@ func updateExtraInfo(args SqlArgList) (err error) {
 	birth , err := strconv.Atoi(args[3])
 	phone,  address, company, signature := args[1],  args[4], args[5], args[6]
 	mysqlORM := orm.NewOrm()
-	user := UserExtraInfo{ userId, phone, gender, birth, address, company, signature }
-	created, id, err := mysqlORM.ReadOrCreate(&user, "Name")
+	user := UserExtraInfo{UserID:userId}
+	created, id, err := mysqlORM.ReadOrCreate(&user, "user_id")
 	if err == nil {
 		if created {
 			log.Infoln("New Insert an object. Id:", id)
 		} else {
+			user = UserExtraInfo{ userId, phone, gender, birth, address, company, signature }
 			_, err = mysqlORM.Update(&user)
 			if err != nil {
 				log.Errorf("update user(%d) extra info error : %s", userId, err)

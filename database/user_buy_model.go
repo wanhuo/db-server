@@ -21,7 +21,7 @@ func (u *UserTopUpShell) TableName() string {
 }
 
 type UserTopUpRecord struct{
-	AutoID        int    `orm:"-;auto;pk"`
+	AutoID        int    `orm:"column(auto_id);auto;pk"`
 	UserId        int	 `orm:"column(userId);"`
 	TransactionID string `orm:"column(transactionId);index"`
 	RMB			  int    `orm:"column(rmb)"`
@@ -97,7 +97,7 @@ func topupHistory(args SqlArgList) (rows []*dbproto.OneRow, err error) {
 	mysqlORM := orm.NewOrm()
 	mysqlORM.Using("yomail_web_db")
 	var historyList []orm.ParamsList
-	_, err = mysqlORM.QueryTable("topup_record_t").Filter("userId", userId).ValuesList(&historyList,
+	_, err = mysqlORM.QueryTable("topup_record_t").Filter("userId", userId).OrderBy("-transactionTime").ValuesList(&historyList,
 		"transactionId", "rmb", "shell", "status", "payType", "transactionTime")
 	if err != nil {
 		log.Errorf("query topup history error: %s", err)
@@ -115,8 +115,8 @@ func userVipHistory(args SqlArgList) (rows []*dbproto.OneRow, err error) {
 	mysqlORM := orm.NewOrm()
 	mysqlORM.Using("yomail_web_db")
 	var historyList []orm.ParamsList
-	_, err = mysqlORM.QueryTable("purchase_record_t").Filter("userId", userId).ValuesList(&historyList,
-		"orderId", "shell", "orderTime", "goodsId", "start_time", "end_time")
+	_, err = mysqlORM.QueryTable("purchase_record_t").Filter("userId", userId).OrderBy("-orderTime").ValuesList(&historyList,
+		"orderId", "shell", "orderTime", "goodsId", "startTime", "endTime")
 	if err != nil {
 		log.Errorf("query topup history error: %s", err)
 		return
@@ -129,7 +129,7 @@ func userVipHistory(args SqlArgList) (rows []*dbproto.OneRow, err error) {
 }
 
 func init() {
-	orm.RegisterModel(new(UserTopUpShell), new(UserBuyMembership))
+	orm.RegisterModel(new(UserTopUpShell), new(UserTopUpRecord), new(UserBuyMembership))
 	RegisterRunSqlCB("user.buy.shell",  userTopup)
 	RegisterRunSqlCB("user.buy.vip",   userBuyVip)
 	RegisterQueryCB("topup.history", topupHistory)
