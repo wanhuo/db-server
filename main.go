@@ -13,6 +13,10 @@ import (
 var log *golog.Logger = golog.New("main")
 
 func main() {
+	err := golog.SetOutputLogger("*", "logs/db.log")
+	if err != nil {
+		panic(err)
+	}
 	queue := cellnet.NewEventQueue()
 
 	host := fmt.Sprintf("%s:%d", config.Host["ip"], int(config.Host["port"].(float64)))
