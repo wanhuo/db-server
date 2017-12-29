@@ -6,11 +6,9 @@ import (
 	"db-server/config"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/davyxu/golog"
 	"db-server/proto/dbproto"
 )
 
-var log *golog.Logger = golog.New("Database")
 //connect to mysql
 func init() {
 
@@ -26,7 +24,6 @@ func init() {
 
 		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8", user, password, host, port, dbName)
 		if dbID == "ms_db" {
-			log.Debugf("default database: ms db")
 			orm.RegisterDataBase("default", "mysql", dsn, dbPool, dbPool)
 		}else{
 			orm.RegisterDataBase(dbName, "mysql", dsn, dbPool, dbPool)
