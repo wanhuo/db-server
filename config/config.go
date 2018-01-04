@@ -59,16 +59,17 @@ func parseConfig (){
 }
 
 func init()  {
-	err := golog.SetOutputLogger("*", "logs/db.log")
-	err  = golog.SetLevelByString("*", "info")
-	if err != nil {
-		panic(err)
-	}
-
 	workPath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		panic(err)
 	}
+	logPath := filepath.Join(workPath, "logs", "db.log")
+	err = golog.SetOutputLogger("*", logPath)
+	err = golog.SetLevelByString("*", "info")
+	if err != nil {
+		panic(err)
+	}
+
 	appConfigPath = filepath.Join(workPath, "config", configFile)
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "config", configFile)
