@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/davyxu/golog"
+	"github.com/jingwanglong/golog"
 	"github.com/davyxu/pbmeta"
 	pbprotos "github.com/davyxu/pbmeta/proto"
 	plugin "github.com/davyxu/pbmeta/proto/compiler"
