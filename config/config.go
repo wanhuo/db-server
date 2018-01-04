@@ -2,14 +2,14 @@ package config
 
 import (
 	"os"
+	"fmt"
 	"path/filepath"
 
+	"github.com/jingwanglong/golog"
 	"github.com/astaxie/beego/config"
-	"github.com/davyxu/golog"
 	"github.com/astaxie/beego/utils"
 )
 
-var log *golog.Logger = golog.New("config")
 
 var (
 	// AppPath is the absolute path to the app
@@ -59,11 +59,13 @@ func parseConfig (){
 }
 
 func init()  {
-	var err error
-	if AppPath, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
+	err := golog.SetOutputLogger("*", "logs/db.log")
+	err  = golog.SetLevelByString("*", "info")
+	if err != nil {
 		panic(err)
 	}
-	workPath, err := os.Getwd()
+
+	workPath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +73,8 @@ func init()  {
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "config", configFile)
 		if !utils.FileExists(appConfigPath) {
-			log.Errorf("file is not exist!")
+			fmt.Printf("work path is %s\n", workPath)
+			panic("file is not exist!")
 			os.Exit(1)
 		}
 	}
