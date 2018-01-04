@@ -2,8 +2,8 @@ package database
 
 import (
 	"strconv"
-	"github.com/astaxie/beego/orm"
 	"db-server/proto/dbproto"
+	"github.com/astaxie/beego/orm"
 )
 
 type UserTopUpShell struct{

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 	"db-server/config"
+	"db-server/proto/dbproto"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-	"db-server/proto/dbproto"
 )
 
 //connect to mysql
@@ -56,6 +56,7 @@ func RegisterQueryCB(action string, sqlHandler querySqlFunc){
 }
 
 func ProcessQuerySql(action string, params []*dbproto.OneField) (rows []*dbproto.OneRow, err error) {
+	defer recoverFromPanic(&err)
 	handler := querySqlHandler[action]
 	if handler == nil{
 		err = fmt.Errorf("can not find %s handler", action)
@@ -71,6 +72,7 @@ func ProcessQuerySql(action string, params []*dbproto.OneField) (rows []*dbproto
 }
 
 func ProcessRunSql(action string, params []*dbproto.OneField) (err error) {
+	defer recoverFromPanic(&err)
 	handler := runSqlHandler[action]
 	if handler == nil{
 		err = fmt.Errorf("can not find %s handler", action)
