@@ -1,50 +1,52 @@
 package logic
 
 import (
-	"github.com/jingwanglong/cellnet"
-	"github.com/davyxu/golog"
-	"db-server/proto/dbproto"
+	"github.com/jingwanglong/golog"
 	"db-server/database"
+	"db-server/proto/dbproto"
+	"github.com/jingwanglong/cellnet"
 )
 
 var log *golog.Logger = golog.New("SqlProcessor")
+
+func ErrorMsg(errorInfo string) *dbproto.ErrorInfo {
+	var errorMsg dbproto.ErrorInfo
+	*errorMsg.Code = 1
+	*errorMsg.Message = errorInfo
+	return &errorMsg
+}
 
 func InitMessageRegister(peer cellnet.Peer) {
 	cellnet.RegisterMessage(peer, "dbproto.RunSql", func(ev *cellnet.Event) {
 		var ack dbproto.RunSqlResponse
 		msg := ev.Msg.(*dbproto.RunSql)
+		ack.OpId = msg.OpId
 		sqlAlias := *msg.Xml
 		err := database.ProcessRunSql(sqlAlias, msg.Params)
-		var ErrorMsg dbproto.ErrorInfo
 		if err != nil {
-			*ErrorMsg.Code = 1
-			*ErrorMsg.Message = err.Error()
-			ack.Error = &ErrorMsg
+			ack.Error = ErrorMsg(err.Error())
 		}
-		ack.OpId = msg.OpId
 		ev.Send(&ack)
 	})
 	
 	cellnet.RegisterMessage(peer, "dbproto.QuerySql", func(ev *cellnet.Event) {
 		var ack dbproto.QuerySqlResponse
 		msg := ev.Msg.(*dbproto.QuerySql)
+		ack.OpId = msg.OpId
 		sqlAlias := *msg.Xml
 		rows, err := database.ProcessQuerySql(sqlAlias, msg.Params)
-		var ErrorMsg dbproto.ErrorInfo
 		if err != nil {
-			*ErrorMsg.Code = 1
-			*ErrorMsg.Message = err.Error()
-			ack.Error = &ErrorMsg
+			ack.Error = ErrorMsg(err.Error())
 		}else{
 			ack.Rows = rows
 		}
-		ack.OpId = msg.OpId
 		ev.Send(&ack)
 	})
 	
 	cellnet.RegisterMessage(peer, "dbproto.BatchSqlList", func(ev *cellnet.Event) {
 		var ack dbproto.BatchSqlListResponse
 		msg := ev.Msg.(*dbproto.BatchSqlList)
+		ack.OpId = msg.OpId
 		for _, sql := range msg.Sql {
 			var sqlResult dbproto.BatchSqlListResponse_OneSqlResult
 			var err error
@@ -59,11 +61,8 @@ func InitMessageRegister(peer cellnet.Peer) {
 			}else{
 				err = database.ProcessRunSql(sqlAlias, sql.Params)
 			}
-			var ErrorMsg dbproto.ErrorInfo
 			if err != nil {
-				*ErrorMsg.Code = 1
-				*ErrorMsg.Message = err.Error()
-				sqlResult.Error = &ErrorMsg
+				sqlResult.Error = ErrorMsg(err.Error())
 			}
 			ack.Result = append(ack.Result, &sqlResult)
 		}
